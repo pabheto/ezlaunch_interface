@@ -1,9 +1,12 @@
 "use client";
 
+import TradingControls from "@/components/trading/TradingControls";
 import TradingTerminalChart from "@/components/trading/TradingTerminalChart";
+import WalletsDisplay from "@/components/trading/WalletsDisplay";
 import { TradingDirection } from "@/library/domain/trading/types/TradingTransaction";
 import useMockTradingEngine from "@/library/hooks/useMockTradingEngine";
-import { useEffect, useMemo, useRef } from "react";
+import { useCurrentMockTradingEngine } from "@/library/state/providers/MockTradingProvider";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 export default function Trading() {
   const chartRef = useRef<any>(null);
@@ -13,62 +16,22 @@ export default function Trading() {
     updateUserTokenBalance,
     engineWalletBalances,
     enginePriceFeed,
-  } = useMockTradingEngine(
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    chartRef?.current?.updatePriceFeed
-  );
-
-  const walletBalancesArray = useMemo<
-    {
-      token: string;
-      balanceMap: { address: string; balance: number }[];
-    }[]
-  >(() => {
-    return Object.keys(engineWalletBalances).reduce<
-      {
-        token: string;
-        balanceMap: { address: string; balance: number }[];
-      }[]
-    >((acc, token) => {
-      const balanceMap = Object.keys(engineWalletBalances[token]).map(
-        (address) => {
-          return {
-            address,
-            balance: engineWalletBalances[token][address],
-          };
-        }
-      );
-      acc.push({
-        token,
-        balanceMap,
-      });
-      return acc;
-    }, []);
-  }, [engineWalletBalances]);
+    lastUpdate,
+  } = useCurrentMockTradingEngine();
 
   useEffect(() => {
     // setting initial wallet balances
-    updateUserTokenBalance("0xmocktokenA", "0xwalletA", 1000);
-  }, []);
+    updateUserTokenBalance("MOCKPACO", "0xwalletA", 1000);
+  }, [updateUserTokenBalance]);
 
-  // Swaps every 1 seconds
   useEffect(() => {
-    const i = setInterval(() => {
-      swap("0xwalletA", 1, TradingDirection.SELL);
+    lastUpdate && chartRef?.current?.updatePriceFeed(lastUpdate);
+  }, [lastUpdate]);
+
+  useEffect(() => {
+    const i = setInterval(async () => {
+      await swap("0xwalletA", 1, TradingDirection.SELL);
     }, 1000);
-
-    return () => {
-      clearInterval(i);
-    };
-  }, [swap]);
-
-  useEffect(() => {
-    const i = setInterval(() => {
-      swap("0xwalletA", 3, TradingDirection.BUY);
-    }, 3000);
 
     return () => {
       clearInterval(i);
@@ -84,25 +47,14 @@ export default function Trading() {
         <div className="trading-chart-container ">
           <TradingTerminalChart ref={chartRef} />
         </div>
-        <div className="trading-actions-container">Trading controls</div>
+        <div className="trading-actions-container">
+          <TradingControls />
+        </div>
       </div>
       <div className="trading-wallets">
         <div className="trading-wallets-header">Wallet Balances</div>
         <div className="trading-wallets-list">
-          {walletBalancesArray.map((m) => {
-            return (
-              <>
-                <div key={m.token}>Token {m.token}</div>
-                {m.balanceMap.map((e) => (
-                  <div key={e.address} className="trading-wallet-item">
-                    <div className="trading-wallet-item-address">
-                      {e.address}: {e.balance}
-                    </div>
-                  </div>
-                ))}
-              </>
-            );
-          })}
+          <WalletsDisplay walletsTokenMap={engineWalletBalances} />
         </div>
       </div>
     </>

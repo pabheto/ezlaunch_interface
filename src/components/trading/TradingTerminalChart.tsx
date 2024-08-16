@@ -30,7 +30,7 @@ const TradingTerminalChart = React.forwardRef(({ ...props }: any, ref) => {
       if (lastUpdate && lastUpdate.time > update.time) {
         return;
       }
-      console.log("Updating ", update);
+
       if (seriesRef) {
         seriesRef.current.update({
           time: update.time,

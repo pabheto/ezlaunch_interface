@@ -72,7 +72,7 @@ export default class MockTradingPairImplementation extends AbstractTradingPairIm
 
     const tradingTransaction: TradingTransaction = {
       transactionId: "mock",
-      tradingDirection: TradingDirection.SELL,
+      tradingDirection: TradingDirection.BUY,
       tokenA: this.pairData.baseToken,
       tokenB: this.pairData.quoteToken,
       amountChangeTokenA: amount0Out,
@@ -89,7 +89,7 @@ export default class MockTradingPairImplementation extends AbstractTradingPairIm
 
     const tradingTransaction: TradingTransaction = {
       transactionId: "mock",
-      tradingDirection: TradingDirection.BUY,
+      tradingDirection: TradingDirection.SELL,
       tokenA: this.pairData.baseToken,
       tokenB: this.pairData.quoteToken,
       amountChangeTokenA: amount0In,

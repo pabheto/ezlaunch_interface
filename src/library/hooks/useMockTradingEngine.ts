@@ -2,15 +2,17 @@ import { useCallback, useEffect, useState } from "react";
 import MockTradingPairImplementation from "../domain/trading/MockTradingPairImplementation";
 import { TradingPair } from "@/library/domain/trading/types/TradingPair";
 import { TradingDirection } from "@/library/domain/trading/types/TradingTransaction";
+import { WalletTokensBalanceMap } from "../domain/trading/types/WalletBalances";
+import { dir } from "console";
 
 const MOCK_PAIR_DATA: TradingPair = {
   pairAddress: "0xmock",
-  baseToken: "0xmocktokenA",
-  quoteToken: "0xmocktokenB",
+  baseToken: "MOCKPACO",
+  quoteToken: "MOCKUSDT",
 };
 
 export interface PriceUpdate {
-  time: string;
+  time: number;
   high: number;
   low: number;
   open: number;
@@ -24,8 +26,6 @@ export default function useMockTradingEngine(
   timeframe: number = 60, // Timeframe in seconds
   priceUpdateCallback?: (u: PriceUpdate) => any
 ) {
-  const [lastDate, setLastDate] = useState<Date | null>(null);
-  const [aha, setAha] = useState(0);
   const [tradingPairImplementation, setTradingPairImplementation] =
     useState<MockTradingPairImplementation | null>(null);
 
@@ -39,18 +39,20 @@ export default function useMockTradingEngine(
     };
   }>({});
 
-  const [engineWalletBalances, setEngineWalletBalances] = useState<{
-    [token: string]: {
-      [address: string]: number;
-    };
-  }>({});
+  const [engineWalletBalances, setEngineWalletBalances] =
+    useState<WalletTokensBalanceMap>({});
 
   useEffect(() => {
     const impl = new MockTradingPairImplementation(tradingPairData);
     impl.mockInitialize(initialAmountA, initialAmountB);
 
     setTradingPairImplementation(impl);
-  }, [setTradingPairImplementation]);
+  }, [
+    initialAmountA,
+    initialAmountB,
+    setTradingPairImplementation,
+    tradingPairData,
+  ]);
 
   const getUserTokenBalance = useCallback(
     (token: string, wallet: string) => {
@@ -77,7 +79,7 @@ export default function useMockTradingEngine(
         };
       });
     },
-    [setEngineWalletBalances, engineWalletBalances]
+    [setEngineWalletBalances]
   );
 
   const updatePriceFeed = useCallback(async () => {
@@ -142,9 +144,9 @@ export default function useMockTradingEngine(
 
     return update;
   }, [
-    enginePriceFeed,
-    setEnginePriceFeed,
     tradingPairImplementation,
+    timeframe,
+    enginePriceFeed,
     priceUpdateCallback,
   ]);
 
@@ -155,15 +157,10 @@ export default function useMockTradingEngine(
         throw new Error("Trading pair implementation not initialized");
       }
 
-      const sourceToken =
-        direction === TradingDirection.BUY
-          ? tradingPairImplementation.getPairData().quoteToken
-          : tradingPairImplementation.getPairData().baseToken;
+      const _tradingPairImplementation = tradingPairImplementation;
 
-      const targetToken =
-        direction === TradingDirection.BUY
-          ? tradingPairImplementation.getPairData().baseToken
-          : tradingPairImplementation.getPairData().quoteToken;
+      const sourceToken = _tradingPairImplementation.getPairData().baseToken;
+      const targetToken = _tradingPairImplementation.getPairData().quoteToken;
 
       const userSourceTokenBalance = getUserTokenBalance(sourceToken, wallet);
 
@@ -173,21 +170,21 @@ export default function useMockTradingEngine(
 
       const swapTransaction =
         direction === TradingDirection.BUY
-          ? tradingPairImplementation.mockSwapBuy(amount)
-          : tradingPairImplementation.mockSwapSell(amount);
+          ? _tradingPairImplementation.mockSwapBuy(amount)
+          : _tradingPairImplementation.mockSwapSell(amount);
 
       // Update balances
       const userTargetTokenBalance = getUserTokenBalance(targetToken, wallet);
 
       const newSourceTokenBalance =
         direction === TradingDirection.BUY
-          ? userSourceTokenBalance - swapTransaction.amountChangeTokenB
-          : userSourceTokenBalance + swapTransaction.amountChangeTokenB;
+          ? userSourceTokenBalance + swapTransaction.amountChangeTokenA
+          : userSourceTokenBalance - swapTransaction.amountChangeTokenA;
 
       const newTargetTokenBalance =
         direction === TradingDirection.BUY
-          ? userTargetTokenBalance + swapTransaction.amountChangeTokenA
-          : userTargetTokenBalance - swapTransaction.amountChangeTokenA;
+          ? userTargetTokenBalance - swapTransaction.amountChangeTokenB
+          : userTargetTokenBalance + swapTransaction.amountChangeTokenB;
 
       updateUserTokenBalance(sourceToken, wallet, newSourceTokenBalance);
       updateUserTokenBalance(targetToken, wallet, newTargetTokenBalance);
@@ -195,13 +192,17 @@ export default function useMockTradingEngine(
       // Updating the price
       await updatePriceFeed();
 
+      // Triggering update on pair impl
+      setTradingPairImplementation(_tradingPairImplementation);
+
       return swapTransaction;
     },
     [
-      tradingPairImplementation,
       getUserTokenBalance,
       updateUserTokenBalance,
       updatePriceFeed,
+      tradingPairImplementation,
+      setTradingPairImplementation,
     ]
   );
 

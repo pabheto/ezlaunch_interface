@@ -7,45 +7,10 @@
       "jsx": true
     }
   },
-  "extends": [
-    "next",
-    "plugin:react/recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:prettier/recommended",
-    "prettier"
-  ],
+  "extends": [],
   "plugins": ["unused-imports", "react-hooks"],
   "ignorePatterns": ["lib/tradingview/*"],
   "rules": {
-    "@typescript-eslint/ban-types": "off",
-    "@typescript-eslint/prefer-as-const": "off",
-    "@typescript-eslint/no-unused-vars": "warn",
-    "@typescript-eslint/no-unused-expressions": "warn",
-    "@typescript-eslint/explicit-function-return-type": "off",
-    "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/ban-ts-comment": "off",
-    "@typescript-eslint/ban-ts-ignore": "off",
-    "@typescript-eslint/explicit-module-boundary-types": "off",
-    "react/react-in-jsx-scope": "off",
-    "@typescript-eslint/no-this-alias": "off",
-    "object-shorthand": ["off", "always"],
-    "react-hooks/exhaustive-deps": "warn",
-    "prettier/prettier": 0 /*[
-      "error",
-      {
-        "endOfLine": "auto"
-      }
-    ],*/,
-    "no-restricted-imports": [
-      "error",
-      {
-        "paths": [
-          {
-            "name": "lodash",
-            "message": "Please import from 'lodash/module' directly to support tree-shaking."
-          }
-        ]
-      }
-    ]
+    "react-hooks/exhaustive-deps": "warn"
   }
 }
