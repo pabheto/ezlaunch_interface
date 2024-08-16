@@ -8,6 +8,6 @@ export interface TradingTransaction {
 
   tokenA: string;
   tokenB: string;
-  tradingAmountA?: number;
-  tradingAmountB?: number;
+  amountChangeTokenA: number;
+  amountChangeTokenB: number;
 }

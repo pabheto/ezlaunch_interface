@@ -4,13 +4,14 @@ import {
   TradingDirection,
   TradingTransaction,
 } from "./types/TradingTransaction";
+import { TradingPair } from "./types/TradingPair";
 
 export default class MockTradingPairImplementation extends AbstractTradingPairImplementation {
   private reserve0: number;
   private reserve1: number;
   private k: number;
 
-  constructor(pairData: any) {
+  constructor(pairData: TradingPair) {
     super(pairData);
     this.reserve0 = 0;
     this.reserve1 = 0;
@@ -62,25 +63,8 @@ export default class MockTradingPairImplementation extends AbstractTradingPairIm
   }
 
   // Trading ops
-  async mockSwapAmount0In(amount0In: number) {
-    this.reserve0 += amount0In;
-    const amount1Out = (amount0In * this.reserve1) / this.reserve0;
-    this.reserve1 -= amount1Out;
-    this.k = this.reserve0 * this.reserve1;
 
-    const tradingTransaction: TradingTransaction = {
-      transactionId: "mock",
-      tradingDirection: TradingDirection.BUY,
-      tokenA: this.pairData.baseToken,
-      tokenB: this.pairData.quoteToken,
-      tradingAmountA: amount0In,
-      tradingAmountB: amount1Out,
-    };
-
-    return tradingTransaction;
-  }
-
-  async mockSwapAmount1In(amount1In: number) {
+  mockSwapBuy(amount1In: number) {
     this.reserve1 += amount1In;
     const amount0Out = (amount1In * this.reserve0) / this.reserve1;
     this.reserve0 -= amount0Out;
@@ -91,8 +75,25 @@ export default class MockTradingPairImplementation extends AbstractTradingPairIm
       tradingDirection: TradingDirection.SELL,
       tokenA: this.pairData.baseToken,
       tokenB: this.pairData.quoteToken,
-      tradingAmountA: amount0Out,
-      tradingAmountB: amount1In,
+      amountChangeTokenA: amount0Out,
+      amountChangeTokenB: amount1In,
+    };
+
+    return tradingTransaction;
+  }
+  mockSwapSell(amount0In: number) {
+    this.reserve0 += amount0In;
+    const amount1Out = (amount0In * this.reserve1) / this.reserve0;
+    this.reserve1 -= amount1Out;
+    this.k = this.reserve0 * this.reserve1;
+
+    const tradingTransaction: TradingTransaction = {
+      transactionId: "mock",
+      tradingDirection: TradingDirection.BUY,
+      tokenA: this.pairData.baseToken,
+      tokenB: this.pairData.quoteToken,
+      amountChangeTokenA: amount0In,
+      amountChangeTokenB: amount1Out,
     };
 
     return tradingTransaction;

@@ -11,4 +11,8 @@ export default abstract class AbstractTradingPair {
   abstract getK(): Promise<Decimal>;
 
   abstract getSpotPrice(): Promise<number>;
+
+  getPairData() {
+    return this.pairData;
+  }
 }
